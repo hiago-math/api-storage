@@ -1,0 +1,27 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Application\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
+
+class {{ class }} extends Controller
+{
+    public function __invoke(
+        Request $request,
+        Validator $validator
+    ): JsonResponse
+    {
+        try {
+            $this->validate($request, $validator::getRules(), $validator::getMessages());
+
+            $this->response_ok([], __('message.success'));
+        } catch (ValidationException $e) {
+            $this->response_fail($e->errors(), __('message.error'));
+        } catch (\Exception $e) {
+            $this->response_fail($e->errors(), __('message.error'), 500);
+        }
+    }
+}
