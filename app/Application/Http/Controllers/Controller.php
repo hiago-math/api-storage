@@ -19,7 +19,7 @@ class Controller extends BaseController
      * @param int $statusCode
      * @return JsonResponse
      */
-    protected function response_api($data, bool $status = true, string $message, int $statusCode = 200): JsonResponse
+    protected function response_api($data, bool $status, string $message, int $statusCode = 200): JsonResponse
     {
         return response()->json([
             'success' => $status,

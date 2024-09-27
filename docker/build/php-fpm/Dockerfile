@@ -37,11 +37,11 @@ RUN apt-get update \
 RUN docker-php-ext-install pdo_mysql gd zip\
     && docker-php-ext-enable pdo_mysql zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg
-
-RUN echo "upload_max_filesize = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "post_max_size = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "max_execution_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "max_input_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini
+#
+#RUN echo "upload_max_filesize = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+#    && echo "post_max_size = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+#    && echo "max_execution_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+#    && echo "max_input_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini
 
 
 # Install the xdebug
@@ -59,6 +59,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 # Copy php.ini configration
 COPY ./php.ini /usr/local/etc/php/php.ini
+
+COPY ./custom.ini /usr/local/etc/php/conf.d/custom.ini
 
 # Clear package lists
 RUN rm -rf /var/lib/apt/lists/*

@@ -15,7 +15,12 @@ Route::group(['prefix' => 'api'], function () {
                 'mongodb' => db_mongo_check(),
                 'redis' => db_redis_check()
             ],
-            'fw' => ['type' => 'laravel', 'version' => app()->version()]
+            'fw' => ['type' => 'laravel', 'version' => app()->version()],
+            'php' => [
+                'upload_max_filesize' => ini_get('upload_max_filesize'),
+                'post_max_size' => ini_get('post_max_size'),
+                'client_max_body_size' => config('nginx.client_max_body_size'),
+            ]
         ]);
     });
 

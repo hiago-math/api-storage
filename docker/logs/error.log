@@ -1,2 +1,6 @@
 2024/09/26 20:29:26 [emerg] 1#1: "keepalive_timeout" directive is duplicate in /etc/nginx/nginx.conf:38
 2024/09/26 20:36:14 [emerg] 1#1: "client_max_body_size" directive is duplicate in /etc/nginx/nginx.conf:38
+2024/09/26 22:21:57 [emerg] 1#1: "client_max_body_size" directive is duplicate in /etc/nginx/conf.d/laravel-ddd-example.conf:7
+2024/09/26 22:22:23 [emerg] 1#1: "client_max_body_size" directive is duplicate in /etc/nginx/conf.d/laravel-ddd-example.conf:7
+2024/09/26 22:24:45 [emerg] 1#1: "client_body_timeout" directive invalid value in /etc/nginx/nginx.conf:35
+2024/09/26 22:25:17 [emerg] 1#1: "client_max_body_size" directive invalid value in /etc/nginx/nginx.conf:35

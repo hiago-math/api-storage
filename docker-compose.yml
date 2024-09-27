@@ -32,6 +32,7 @@ services:
             - "9000"
         volumes:
             - ${APPLICATION}:/var/www/html
+            - ./docker/build/php-fpm/custom.ini:/usr/local/etc/php/conf.d/custom.ini
         environment:
             - COMPOSER_MEMORY_LIMIT=-1
             #- PHP_IDE_CONFIG:serverName=Xdebug

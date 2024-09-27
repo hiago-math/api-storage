@@ -292,7 +292,9 @@ if (!function_exists('compress_binary_file')) {
     {
         if (!$binary) return $binary;
 
-        return utf8_encode(gzcompress($binary));
+        $binary =  new \MongoDB\BSON\Binary($binary, \MongoDB\BSON\Binary::TYPE_GENERIC);
+
+        return utf8_encode($binary);
     }
 }
 
