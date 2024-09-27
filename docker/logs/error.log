@@ -1,0 +1,2 @@
+2024/09/26 20:29:26 [emerg] 1#1: "keepalive_timeout" directive is duplicate in /etc/nginx/nginx.conf:38
+2024/09/26 20:36:14 [emerg] 1#1: "client_max_body_size" directive is duplicate in /etc/nginx/nginx.conf:38

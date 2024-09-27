@@ -5,6 +5,7 @@ namespace Application\Http\Controllers\File;
 use Application\Http\Controllers\Controller;
 use Domain\File\Interfaces\Services\IFileService;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DownloadFileController extends Controller
 {
@@ -16,10 +17,14 @@ class DownloadFileController extends Controller
     public function __invoke(
         string       $file_uid,
         IFileService $fileService
-    ): BinaryFileResponse
+    ): JsonResponse|BinaryFileResponse
     {
-        $downloadedFile = $fileService->downalodFile($file_uid);
+        try {
+            $downloadedFile = $fileService->downalodFile($file_uid);
 
-        return \response()->download($downloadedFile, $downloadedFile->getClientOriginalName());
+            return \response()->download($downloadedFile, $downloadedFile->getClientOriginalName());
+        } catch (\Throwable $exception) {
+            return $this->response_fail(['trace' => $exception->getTrace()], $exception->getMessage(), 500);
+        }
     }
 }

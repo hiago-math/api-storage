@@ -24,7 +24,7 @@ class FileRepository extends AbstractRepository implements IFileRepository
         $created = $this->getModel()
             ->create($createFileDTO->toArray());
 
-        return $this->toCollect($created->toArray());
+        return $this->toCollect(['file_uid' => $created->file_uid]);
     }
 
     /**

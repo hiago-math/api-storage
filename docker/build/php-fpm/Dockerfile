@@ -38,9 +38,11 @@ RUN docker-php-ext-install pdo_mysql gd zip\
     && docker-php-ext-enable pdo_mysql zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg
 
+RUN echo "upload_max_filesize = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_execution_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_input_time = 0" >> /usr/local/etc/php/conf.d/uploads.ini
 
-# Copy opcache configration
-COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Install the xdebug
 #COPY ./xdebug.ini /tmp

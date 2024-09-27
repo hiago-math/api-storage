@@ -51,13 +51,14 @@ class CreateFileDTO extends DTOAbstract
 
     public function register(UploadedFile|File $file): self
     {
+        dd($file->getError(), UPLOAD_ERR_INI_SIZE);
         $this->file_uid = Str::uuid();
         $this->file_name = $file->getClientOriginalName();
         $this->extension = $file->getClientOriginalExtension();
         $this->mime_type = $file->getClientMimeType();
         $this->url = '';
         $this->size = $file->getSize();
-        $this->content_file = utf8_encode($file->getContent());
+        $this->content_file = compress_binary_file($file->getContent());
         $this->hash_file = get_hash_file($this->content_file);
 
         return $this;

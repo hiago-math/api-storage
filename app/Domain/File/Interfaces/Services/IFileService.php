@@ -7,8 +7,10 @@ use Illuminate\Http\UploadedFile;
 interface IFileService
 {
     /**
-     * @param string $file_uid
+     * @param string $uid
      * @return UploadedFile
      */
-    public function downalodFile(string $file_uid): UploadedFile;
+    public function downalodFile(string $uid): UploadedFile;
+
+    public function getBinaryFile(string $uid);
 }

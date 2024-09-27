@@ -21,18 +21,24 @@ class FileService implements IFileService
     /**
      * {@inheritDoc}
      */
-    public function downalodFile(string $file_uid): UploadedFile
+    public function downalodFile(string $uid): UploadedFile
     {
-        $file = $this->fileRepository->findFileBy('file_uid', $file_uid);
+        $file = $this->fileRepository->findFileBy('file_uid', $uid);
         $filename = add_extension($file->get('file_name'), $file->get('extension'));
 
         $tmpFile = tempnam(sys_get_temp_dir(), 'download-' . now()->toString());
-        file_put_contents($tmpFile, utf8_decode($file->get('content_file')));
+        file_put_contents($tmpFile, uncompressed_binary_file($file->get('content_file')));
 
         return new UploadedFile(
             $tmpFile,
             $filename,
             $file->get('mime_type')
         );
+    }
+
+    public function getBinaryFile(string $uid)
+    {
+        $file = $this->fileRepository->findFileBy('file_uid', $uid);
+
     }
 }

@@ -1,4 +1,4 @@
-include .env
+include .env.example
 
 setup:
 	@export APP_URL=${APP_URL}; \
@@ -15,10 +15,10 @@ start:
 	@docker-compose exec app composer install
 	@echo "Gerando chave do projeto..."
 	@docker-compose exec app php artisan key:generate
-	@echo "Rodando migrate..."
+#	@echo "Rodando migrate..."
 	@echo "Comando 'make start' executado com sucesso."
 	@echo "URL API ${APP_URL}:${NGINX_HOST_HTTP_PORT}/api"
-	@echo "URL WEB ${APP_URL}:${NGINX_HOST_HTTP_PORT}"
+#	@echo "URL WEB ${APP_URL}:${NGINX_HOST_HTTP_PORT}"
 
 shell-app:
 	@docker-compose exec app bash

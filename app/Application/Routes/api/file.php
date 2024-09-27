@@ -6,5 +6,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('file')->name('.file')->group(function () {
     Route::post('', SaveFileController::class)->name('.save');
-    Route::get('/download/{file_uid}', DownloadFileController::class)->name('.download');
+    Route::get('/{file_uid}/download', DownloadFileController::class)->name('.download');
 });

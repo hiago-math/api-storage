@@ -209,6 +209,7 @@ if (!function_exists('remove_null_array')) {
 }
 
 if (!function_exists('get_hash_file')) {
+
     /**
      * @param string $binFile
      * @return string
@@ -221,7 +222,10 @@ if (!function_exists('get_hash_file')) {
 
 if (!function_exists('db_mongo_check')) {
 
-    function db_mongo_check()
+    /**
+     * @return string
+     */
+    function db_mongo_check(): string
     {
         try {
             $mongodb = new Connection(config('database.connections.mongodb'));;
@@ -236,7 +240,10 @@ if (!function_exists('db_mongo_check')) {
 
 if (!function_exists('db_redis_check')) {
 
-    function db_redis_check()
+    /**
+     * @return string
+     */
+    function db_redis_check(): string
     {
         try {
             $client = new \Predis\Client([
@@ -254,7 +261,10 @@ if (!function_exists('db_redis_check')) {
 
 if (!function_exists('time_start_app')) {
 
-    function time_start_app()
+    /**
+     * @return string
+     */
+    function time_start_app(): string
     {
         $timeStarted = Storage::get('uptime.txt');
         return Carbon::parse($timeStarted)->timezone(config('app.timezone'))->diffForHumans();
@@ -263,9 +273,41 @@ if (!function_exists('time_start_app')) {
 
 if (!function_exists('memory_usage')) {
 
-    function memory_usage()
+    /**
+     * @return string
+     */
+    function memory_usage(): string
     {
         return round(memory_get_usage() / (1024 * 1024), 2) . ' MB';
     }
 }
+
+if (!function_exists('compress_binary_file')) {
+
+    /**
+     * @param string|null $binary
+     * @return string|null
+     */
+    function compress_binary_file(?string $binary = null): ?string
+    {
+        if (!$binary) return $binary;
+
+        return utf8_encode(gzcompress($binary));
+    }
+}
+
+if (!function_exists('uncompressed_binary_file')) {
+
+    /**
+     * @param string|null $binary
+     * @return string|null
+     */
+    function uncompressed_binary_file(?string $binary = null): ?string
+    {
+        if (!$binary) return $binary;
+
+        return gzuncompress(utf8_decode($binary));
+    }
+}
+
 
