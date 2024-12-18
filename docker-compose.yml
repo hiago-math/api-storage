@@ -55,6 +55,16 @@ services:
             MONGO_INITDB_ROOT_PASSWORD: root
         networks:
             - MyNetwork
+    redis:
+        container_name: storage_redis
+        env_file:
+            - .env
+        hostname: api-storage.redis
+        image: redis
+        ports:
+            - "${REDIS_PORT}:${REDIS_PORT}"
+        networks:
+            - MyNetwork
 
 volumes:
     esdata:

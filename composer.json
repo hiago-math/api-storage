@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.0.2",
         "ext-mongodb": "*",
+        "ext-zlib": "*",
         "fruitcake/laravel-cors": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "jenssegers/mongodb": "^3.9",
@@ -17,8 +18,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "php-amqplib/php-amqplib": "^2.0",
-        "predis/predis": "^2.2",
-        "ext-zlib": "*"
+        "predis/predis": "^2.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

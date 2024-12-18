@@ -114,19 +114,19 @@ if (!function_exists('send_log')) {
      */
     function send_log(string $message, array $options = [], string $type = "info", \Exception $exception = null)
     {
-        $doctype = \Shared\Enums\DocTypesElasticsearchEnum::DOC;
+//        $doctype = \Shared\Enums\DocTypesElasticsearchEnum::DOC;
         if (!is_null($exception)) {
             $options['message_exception'] = $exception->getMessage();
             $options['code'] = $exception->getCode();
             $options['file'] = $exception->getFile() . ": " . $exception->getLine();
             $options['trace'] = $exception->getTraceAsString();
-            $doctype = \Shared\Enums\DocTypesElasticsearchEnum::ERROR;
+//            $doctype = \Shared\Enums\DocTypesElasticsearchEnum::ERROR;
         }
 
         Log::$type($message, $options);
         $options['message'] = $message;
 
-        create_log_elastic($type, $doctype, $options);
+//        create_log_elastic($type, $doctype, $options);
     }
 }
 
@@ -294,7 +294,7 @@ if (!function_exists('compress_binary_file')) {
 
         $binary =  new \MongoDB\BSON\Binary($binary, \MongoDB\BSON\Binary::TYPE_GENERIC);
 
-        return utf8_encode($binary);
+        return utf8_encode(gzcompress($binary));
     }
 }
 
