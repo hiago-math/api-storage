@@ -22,12 +22,16 @@ class CreateChunkFileDTO extends DTOAbstract
    /** @var string  */
    public string $filename;
 
-    public function register(UploadedFile|File $file, int $chunk_number, int $total_chunks, $filename): self
+   /** @var int  */
+   public int $size;
+
+    public function register(UploadedFile|File $file, int $chunk_number, int $total_chunks, string $filename, int $size): self
     {
         $this->file = $file;
         $this->chunk_number = $chunk_number;
         $this->total_chunks = $total_chunks;
         $this->filename = $filename;
+        $this->size = $size;
 
         return $this;
     }

@@ -313,3 +313,48 @@ if (!function_exists('uncompressed_binary_file')) {
 }
 
 
+if (!function_exists('sanitizar_string')) {
+    function sanitizar_string(?string $palavra = null): ?string
+    {
+        if (is_null($palavra)) return $palavra;
+
+        $palavra = str_replace(' ', '_', $palavra);
+
+        $acentos = [
+            'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì',
+            'Í', 'Î', 'Ï', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ù', 'Ú', 'Û', 'Ü',
+            'Ý', 'à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë',
+            'ì', 'í', 'î', 'ï', 'ð', 'ò', 'ó', 'ô', 'õ', 'ö', 'ù', 'ú',
+            'û', 'ü', 'ý', 'ÿ'
+        ];
+
+        $semAcentos = [
+            'A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I',
+            'I', 'I', 'I', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U',
+            'Y', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e',
+            'i', 'i', 'i', 'i', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u',
+            'u', 'u', 'y', 'y'
+        ];
+
+        $palavra = str_replace($acentos, $semAcentos, $palavra);
+
+        $caracteresEspeciais = [
+            '@', '&', 'ç'
+        ];
+
+        $caracteresSemEspeciais = [
+            'a', '_e_', 'c'
+        ];
+
+        $palavra = str_replace($caracteresEspeciais, $caracteresSemEspeciais, $palavra);
+
+        $pontuacaoParaRemover = [
+            '.', ',', '!', '/', '(', ')', 'º'
+        ];
+
+        $palavra = str_replace($pontuacaoParaRemover, '', $palavra);
+
+        return strtolower($palavra);
+    }
+}
+

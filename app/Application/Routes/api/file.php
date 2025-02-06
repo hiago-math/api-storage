@@ -5,6 +5,6 @@ use Application\Http\Controllers\File\SaveFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('file')->name('.file')->group(function () {
-    Route::post('', SaveFileController::class)->name('.save');
+    Route::post('', \Application\Http\Controllers\File\SaveMultipartFileController::class)->name('.save');
     Route::get('/{file_uid}/download', DownloadFileController::class)->name('.download');
 });

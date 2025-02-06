@@ -3,6 +3,7 @@
 namespace Infrastructure\Repositories;
 
 use Illuminate\Support\Collection;
+use Jenssegers\Mongodb\Eloquent\Model;
 
 abstract class AbstractRepository
 {
@@ -16,7 +17,7 @@ abstract class AbstractRepository
     /**
      * @return mixed
      */
-    public function getModel()
+    public function getModel(): Model|\Illuminate\Database\Eloquent\Model
     {
         return $this->model;
     }

@@ -3,28 +3,26 @@
 namespace Application\Http\Controllers\File;
 
 use Application\Http\Controllers\Controller;
-use Domain\File\Actions\CreateFileAction;
+use Domain\File\Actions\CreateChunkFileAction;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Shared\DTO\Files\CreateFileDTO;
+use Shared\DTO\Files\CreateChunkFileDTO;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
-class SaveFileController extends Controller
+class SaveMultipartFileTesteController extends Controller
 {
     /**
      * @param Request $request
-     * @param CreateFileDTO $dto
-     * @param CreateFileAction $action
+     * @param CreateChunkFileDTO $dto
+     * @param CreateChunkFileAction $action
      * @return JsonResponse
      */
     public function __invoke(
         Request                $request,
-        CreateFileDTO     $dto,
-        CreateFileAction $action
     ): JsonResponse
     {
-        $dto->register(...$request->all());
-        $action->execute($dto);
+
+
 
         return $this->response_ok([], 'Arquivo salvo com sucesso!', Response::HTTP_CREATED);
     }
