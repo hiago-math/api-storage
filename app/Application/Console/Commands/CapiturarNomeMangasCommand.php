@@ -10,6 +10,7 @@ use Shared\DTO\Mangas\CreateMangaDTO;
 class CapiturarNomeMangasCommand extends Command
 {
     private array            $resultados = [];
+    private array            $resultadosFinais = [];
     protected $signature = 'test:test';
 
     protected $description = "[DDD] Create a new domain controller";
@@ -29,6 +30,8 @@ class CapiturarNomeMangasCommand extends Command
     {
         $url = "https://www.lermangas.com.br/search/label/Series";
         $this->buscarMangas($url);
+
+        $this->test();
 
         $this->salvarMangas($dto);
 
@@ -78,6 +81,28 @@ class CapiturarNomeMangasCommand extends Command
             );
 
             $this->repository->saveManga($dto);
+        }
+    }
+
+    private function test()
+    {
+        foreach ($this->resultados as $resultado) {
+            $url = Arr::get($resultado, 'href');
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            $pageContent = curl_exec($ch);
+            curl_close($ch);
+
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($status === 404) return ;
+
+            $pageContent = preg_replace('/\s+/', ' ', $pageContent);
+
+            preg_match_all("/class='fmed'/", $pageContent, $matches);
+            dd($matches);
         }
     }
 }

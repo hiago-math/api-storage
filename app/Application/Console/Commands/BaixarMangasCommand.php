@@ -3,35 +3,39 @@
 namespace Application\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Infrastructure\Models\Manga;
 
 class BaixarMangasCommand extends Command
 {
-    private array $titulos = [
-        'Solo Leveling'
-    ];
     protected $signature = 'teste:teste';
 
     protected $description = "[DDD] Create a new domain controller";
 
-    public function handle()
+    public function handle(
+        Manga $model
+    )
     {
-        foreach ($this->titulos as $titulo) {
-            for ($i = 201; $i <= 10000; $i++) {
-                $titulo = strtolower(str_replace(' ', '-', $titulo));
-                $url = "https://www.lermangas.com.br/2024/09/{$titulo}-capitulo-{$i}.html";
-                $return = $this->buscarCap($url, $titulo);
+        $results = $model->newQuery()->get()->toArray();
 
-                if (!$return) break;
+        foreach ($results as $result) {
+            for ($i = 0; $i <= 10000; $i++) {
+
+                $url = Str::replace('.html', "-capitulo-{$i}.html", Arr::get($result, 'link'));
+
+                $this->buscarCap($url, Arr::get($result, 'nome'));
             }
         }
     }
 
     private function buscarCap(string $url, string $titulo, int $tentativa = 0)
     {
-        if ($tentativa > 1) return false;
-        $cap = Str::between($url, 'capitulo-', '.html');
+        if ($tentativa > 4) return false;
+
+        preg_match('/[-_](\d+)(?:\.html|-const\.html)/', $url, $matches);
+        $cap = Arr::get($matches, 1);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -41,19 +45,43 @@ class BaixarMangasCommand extends Command
 
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
+        if ($tentativa === 2) {
+            if (Str::contains($url, '-const')) $url = Str::replace('-const.html', '.html', $url);
+            preg_match('/capitulo-(\d+)/', $url, $matches);
+            if (isset($matches[1])) {
+                $chapterNumber = (int)$matches[1]; // Converte para inteiro
+
+                // Adiciona zero à esquerda se o número estiver entre 0 e 9
+                $formattedChapterNumber = str_pad($chapterNumber, 2, '0', STR_PAD_LEFT);
+
+                // Substitui o número do capítulo na URL com o número formatado
+                $url = preg_replace('/capitulo-\d+/', 'capitulo-' . $formattedChapterNumber, $url);
+
+                return $this->buscarCap($url, $titulo, ++$tentativa);
+            }
+        }
+
+        if ($tentativa === 3) {
+            $url = Str::replace("-capitulo-$cap", "_" . (int)$cap, $url);
+
+            return $this->buscarCap($url, $titulo, ++$tentativa);
+        }
+
         if ($status === 404) {
-            echo 'Nao encontrado: ' . $tentativa. ' ' . $url . PHP_EOL;
+            echo 'Nao encontrado: ' . $tentativa . ' ' . $url . PHP_EOL;
 
             if (!Str::contains($url, '-const')) $url = Str::replace('.html', '-const.html', $url);
-            $this->buscarCap($url, $titulo, ++$tentativa);
+
+            return $this->buscarCap($url, $titulo, ++$tentativa);
         }
+
+        echo $status . PHP_EOL;
 
         $pageContent = preg_replace('/\s+/', ' ', $pageContent);
 
         $links = Str::between($pageContent, 'ts_reader = [', ']');
 
         $links = explode(',', Str::replace('"', "'", $links));
-
         $dir = "mangas/{$titulo}/cap$cap";
 
         // Cria o diretório se não existir
