@@ -6,6 +6,7 @@ use Domain\LerManga\Interfaces\Repositories\IMangaRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Infrastructure\Models\LerManga;
 use Shared\DTO\LerManga\CreateOrUpdateMangaDTO;
 
 class CapiturarNomeMangasCommand extends Command
@@ -59,6 +60,8 @@ class CapiturarNomeMangasCommand extends Command
         if (empty($matches)) dd('acabou');
 
         foreach ($matches[0] as $key => $match) {
+            if (LerManga::query()->where('label', sanitizar_string($matches[2][$key]))->exists()) continue;
+
             $this->resultados[] = [
                 'href' => $matches[1][$key],
                 'title' => $matches[2][$key]
