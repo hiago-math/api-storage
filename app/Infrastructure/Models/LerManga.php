@@ -4,16 +4,19 @@ namespace Infrastructure\Models;
 
 use Jenssegers\Mongodb\Eloquent\Model;
 
-class Manga extends Model
+class LerManga extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'mangas';
+    protected $collection = 'ler_mangas';
 
     protected $fillable = [
         'uid',
         'nome',
         'label',
         'link',
-        'num_caps',
+        'total_chapters',
+        'infos',
+        'chapters',
+        'sync',
     ];
 }

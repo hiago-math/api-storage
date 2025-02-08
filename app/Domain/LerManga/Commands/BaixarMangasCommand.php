@@ -1,12 +1,12 @@
 <?php
 
-namespace Application\Console\Commands;
+namespace Domain\LerManga\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Infrastructure\Models\Manga;
+use Infrastructure\Models\LerManga;
 
 class BaixarMangasCommand extends Command
 {
@@ -15,7 +15,7 @@ class BaixarMangasCommand extends Command
     protected $description = "[DDD] Create a new domain controller";
 
     public function handle(
-        Manga $model
+        LerManga $model
     )
     {
         $results = $model->newQuery()->get()->toArray();
@@ -75,8 +75,6 @@ class BaixarMangasCommand extends Command
             return $this->buscarCap($url, $titulo, ++$tentativa);
         }
 
-        echo $status . PHP_EOL;
-
         $pageContent = preg_replace('/\s+/', ' ', $pageContent);
 
         $links = Str::between($pageContent, 'ts_reader = [', ']');
@@ -101,6 +99,8 @@ class BaixarMangasCommand extends Command
 
             $count++;
         }
+
+        return true;
     }
 
     private function downloadFile(string $url, string $path, string $filename)

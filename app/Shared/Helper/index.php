@@ -349,7 +349,7 @@ if (!function_exists('sanitizar_string')) {
         $palavra = str_replace($caracteresEspeciais, $caracteresSemEspeciais, $palavra);
 
         $pontuacaoParaRemover = [
-            '.', ',', '!', '/', '(', ')', 'º'
+            '.', ',', '!', '/', '(', ')', 'º', ':'
         ];
 
         $palavra = str_replace($pontuacaoParaRemover, '', $palavra);

@@ -1,21 +1,21 @@
 <?php
 
-namespace Infrastructure\Repositories\Manga;
+namespace Infrastructure\Repositories\LerManga;
 
-use Domain\Manga\Interfaces\Repositories\IMangaRepository;
+use Domain\LerManga\Interfaces\Repositories\IMangaRepository;
 use Illuminate\Support\Collection;
-use Infrastructure\Models\Manga;
+use Infrastructure\Models\LerManga;
 use Infrastructure\Repositories\AbstractRepository;
-use Shared\DTO\Mangas\CreateMangaDTO;
+use Shared\DTO\LerManga\CreateOrUpdateMangaDTO;
 
 class MangaRepository extends AbstractRepository implements IMangaRepository
 {
     public function __construct()
     {
-        parent::__construct(Manga::class);
+        parent::__construct(LerManga::class);
     }
 
-    public function saveManga(CreateMangaDTO $dto): Collection
+    public function saveManga(CreateOrUpdateMangaDTO $dto): Collection
     {
         return $this->toCollect(
             $this->getModel()

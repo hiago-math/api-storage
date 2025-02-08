@@ -18,13 +18,41 @@ class InterfaceObserversProvider extends ServiceProvider
 
     private function loadingObservers()
     {
-        //
+        $arquivos = [];
+        $separ = DIRECTORY_SEPARATOR;
+        $dirObservers = base_path('app' . $separ . 'Infrastructure' . $separ . 'Observers');
+        $dirModels = base_path('app' . $separ . 'Infrastructure' . $separ . 'Models');
+
+        if (File::exists($dirObservers)) {
+            foreach (File::files($dirObservers) as $f) {
+                $observer = str_replace(['.php'], '', $f->getFilename());
+                $model = str_replace('Observer', '', $observer);
+
+                if (File::isFile($dirModels . $separ . $model . '.php')) {
+                    $arquivos[] = [
+                        'Infrastructure\Models\\' . $model,
+                        'Infrastructure\Observers\\' . $observer
+                    ];
+                }
+            }
+        }
+
+        foreach ($arquivos as $classe) {
+            try {
+                app($classe[0])->observe($classe[1]);
+            } catch (\Exception $e) {
+                send_log(__METHOD__ . ':' . __LINE__ . ' ==> ' . $e->getMessage(), [], 'warning');
+            }
+        }
+        unset($arquivos);
+
     }
 
     private function loadingInterfaces()
     {
         $this->prepareDddApis();
         $this->prepareDddDomains();
+        $this->loadingObservers();
 
         foreach (remove_values_null($this->folders) as $class) {
             $this->app->bind(
