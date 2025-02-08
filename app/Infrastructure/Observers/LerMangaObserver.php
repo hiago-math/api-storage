@@ -25,5 +25,6 @@ class LerMangaObserver
         });
 
         $model->chapters = $newChapters;
+        $model->total_chapters = count($newChapters);
     }
 }

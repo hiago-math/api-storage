@@ -29,9 +29,17 @@ class CapiturarCapitulosMangasCommand extends Command
         LerManga $model
     )
     {
-        $results = $model->newQuery()->get()->toArray();
+        $results = $model->newQuery()
+            ->orWhere('infos.Status', '!=', 'Completo')
+            ->orWhereRaw([
+                '$expr' => ['$ne' => ['$total_chapters', '$chapters']]
+            ])
+            ->get()->toArray();
 
         foreach ($results as $result) {
+
+            dd(count(Arr::get($result, 'chapters')), Arr::get($result, 'total_chapters'));
+
             $this->dto->nome = Arr::get($result, 'nome');
             $this->dto->label = sanitizar_string(Arr::get($result, 'nome'));
             $this->dto->link = Arr::get($result, 'link');
