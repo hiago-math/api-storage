@@ -3,6 +3,7 @@
 namespace Domain\LerManga\Commands;
 
 use Domain\LerManga\Interfaces\Repositories\IMangaRepository;
+use Domain\LerManga\Jobs\CapiturarCapitulosMangasJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ use Shared\DTO\LerManga\CreateOrUpdateMangaDTO;
 class CapiturarNomeMangasCommand extends Command
 {
     private array $resultados = [];
-    protected $signature = 'test:test';
+    protected $signature = 'capturar:nome-mangas';
 
     protected $description = "[DDD] Create a new domain controller";
 
@@ -33,7 +34,7 @@ class CapiturarNomeMangasCommand extends Command
 
         $this->buscarMangas($url);
 
-        $this->test();
+        $this->getInfoMangas();
 
         $this->salvarMangas($dto);
 
@@ -60,7 +61,6 @@ class CapiturarNomeMangasCommand extends Command
         if (empty($matches)) dd('acabou');
 
         foreach ($matches[0] as $key => $match) {
-            if (LerManga::query()->where('label', sanitizar_string($matches[2][$key]))->exists()) continue;
 
             $this->resultados[] = [
                 'href' => $matches[1][$key],
@@ -88,15 +88,18 @@ class CapiturarNomeMangasCommand extends Command
                     $this->buscarTotalChapters(Arr::get($resultado, 'title'))
                 );
 
-                $this->repository->saveManga($dto);
+                $lerManga = $this->repository->saveManga($dto);
+
+                CapiturarCapitulosMangasJob::dispatch($lerManga->get('uid'))->onQueue(config('jobs_name.ler_manga.alta'));
+
             } catch (\Throwable $exception) {
-                dd($resultado, $exception);
+                send_log($exception->getMessage(), ['resultado' => $resultado], 'error', $exception);
             }
 
         }
     }
 
-    private function test()
+    private function getInfoMangas()
     {
         $newResult = [];
         foreach ($this->resultados as $resultado) {
@@ -146,9 +149,9 @@ class CapiturarNomeMangasCommand extends Command
         $this->resultados = $newResult;
     }
 
-    private function buscarTotalChapters(string $name)
+    private function buscarTotalChapters(string $name): int
     {
-        $url = "https://www.lermangas.com.br/feeds/posts/default/-/$name?alt=json-in-script&start-index=1&max-results=400";
+        $url = "https://www.lermangas.com.br/feeds/posts/default/-/$name?alt=json-in-script&start-index=1&max-results=999999999";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -162,6 +165,6 @@ class CapiturarNomeMangasCommand extends Command
 
         $json = json_decode($payload, true);
 
-        return Arr::get($json, 'feed.openSearch$totalResults.$t');
+        return Arr::get($json, 'feed.openSearch$totalResults.$t') - 1;
     }
 }

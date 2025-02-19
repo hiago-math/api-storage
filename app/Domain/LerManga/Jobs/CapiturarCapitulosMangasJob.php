@@ -1,27 +1,26 @@
 <?php
 
-namespace Domain\LerManga\Commands;
+namespace Domain\LerManga\Jobs;
 
 use Domain\LerManga\Interfaces\Repositories\IMangaRepository;
-use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Infrastructure\Jobs\Job;
 use Infrastructure\Models\LerManga;
 use Shared\DTO\LerManga\CreateOrUpdateMangaDTO;
 
-class CapiturarCapitulosMangasCommand extends Command
+class CapiturarCapitulosMangasJob extends Job
 {
-    protected $signature = 'test:test1';
+    private IMangaRepository $repository;
+    private CreateOrUpdateMangaDTO $dto;
 
-    protected $description = "[DDD] Create a new domain controller";
 
     public function __construct(
-        private IMangaRepository       $repository,
-        private CreateOrUpdateMangaDTO $dto
+        private string $uid
     )
     {
-        parent::__construct();
-
+        $this->dto = app(CreateOrUpdateMangaDTO::class);
+        $this->repository = app(IMangaRepository::class);
     }
 
     public
@@ -29,23 +28,21 @@ class CapiturarCapitulosMangasCommand extends Command
         LerManga $model
     )
     {
-        $results = $model->newQuery()
-            ->orWhere('infos.Status', '!=', 'Completo')
-            ->orWhereRaw([
-                '$expr' => ['$ne' => ['$total_chapters', '$chapters']]
-            ])
-            ->get()->toArray();
+        send_log($this->uid);
+        $result = $model->newQuery()
+            ->where('uid', $this->uid)
+            ->first()
+            ?->toArray();
 
-        foreach ($results as $result) {
-
-            dd(count(Arr::get($result, 'chapters')), Arr::get($result, 'total_chapters'));
-
+        try {
             $this->dto->nome = Arr::get($result, 'nome');
             $this->dto->label = sanitizar_string(Arr::get($result, 'nome'));
             $this->dto->link = Arr::get($result, 'link');
-            $this->paginateFake(50, Arr::get($result, 'total_chapters'));
 
-            $this->dto = $this->dto->newInstance();
+            $this->paginateFake(50, Arr::get($result, 'total_chapters'));
+        } catch (\Throwable $e) {
+            dd($e);
+            send_log($e->getMessage(), ['uid' => $this->uid, 'result' => $result], 'error', $e);
         }
     }
 
@@ -54,7 +51,7 @@ class CapiturarCapitulosMangasCommand extends Command
         $name = $this->dto->nome;
         $url = "https://www.lermangas.com.br/feeds/posts/default/-/$name?alt=json-in-script&start-index=$start&max-results=$max";
 
-        echo $url . PHP_EOL;
+        send_log($url);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -98,7 +95,6 @@ class CapiturarCapitulosMangasCommand extends Command
 
     private function updateChapters(array $chapters)
     {
-
         $this->dto->chapters = $chapters;
         $this->repository->saveManga($this->dto);
     }

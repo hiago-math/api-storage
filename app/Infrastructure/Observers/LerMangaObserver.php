@@ -11,8 +11,11 @@ class LerMangaObserver
     {
         $original = $model->getOriginal();
 
+        if (Arr::exists($original, 'uid')) $model->uid = Arr::get($original, 'uid', uuid_create());
+
         $originalChapters = Arr::get($original, 'chapters', []);
-        $newChapters = array_merge($model->chapters ?? [], $originalChapters);
+        $originalTotalChapters = max($model->total_chapters, Arr::get($original, 'total_chapters', 0));
+        $newChapters = array_merge($model?->chapters ?? [], $originalChapters);
 
         uksort($newChapters, function($a, $b) {
             preg_match('/(\d+)$/', $a, $matchesA);
@@ -25,6 +28,6 @@ class LerMangaObserver
         });
 
         $model->chapters = $newChapters;
-        $model->total_chapters = count($newChapters);
+        $model->total_chapters = max($originalTotalChapters, count($newChapters));
     }
 }
