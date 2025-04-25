@@ -2,12 +2,13 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Infrastructure\Elasticsearch\Rest;
 use Jenssegers\Mongodb\Connection;
 use MongoDB\Driver\Exception\AuthenticationException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\{Cache, Log};
 
 if (!function_exists('get_files_routes')) {
 
@@ -355,6 +356,644 @@ if (!function_exists('sanitizar_string')) {
         $palavra = str_replace($pontuacaoParaRemover, '', $palavra);
 
         return strtolower($palavra);
+    }
+}
+
+if (!function_exists('get_modules')) {
+    function get_modules(int $cacheMinutos = 60, array $tags = []): array
+    {
+        $separator = DIRECTORY_SEPARATOR;
+        $domains = get_by_cache('list_modules', []);
+        if (is_local() || empty($domains)) {
+            $domains = [];
+            $dir = base_path('app' . $separator . 'Modules');
+            if (Illuminate\Support\Facades\File::exists($dir)) {
+                collect(Illuminate\Support\Facades\File::directories($dir))
+                    ->map(
+                        function ($dir) use ($separator, &$domains) {
+                            $domains[] = Illuminate\Support\Str::afterLast($dir, $separator);
+                        });
+                save_in_cache('list_modules', $domains, $cacheMinutos, $tags);
+            }
+        }
+        return $domains;
+    }
+}
+
+
+if (!function_exists('is_laravel')) {
+    function is_laravel()
+    {
+        return app() instanceof \Illuminate\Foundation\Application;
+    }
+}
+
+if (!function_exists('is_production')) {
+    function is_production()
+    {
+        return in_array(config('app.env'), ['production', 'prod']);
+    }
+}
+
+if (!function_exists('is_local')) {
+    function is_local()
+    {
+        return in_array(config('app.env'), ['local', 'localhost']);
+    }
+}
+
+if (!function_exists('is_develop')) {
+    function is_develop()
+    {
+        return in_array(config('app.env'), ['develop', 'dev']);
+    }
+}
+
+if (!function_exists('is_hmg')) {
+    function is_hmg()
+    {
+        return in_array(config('app.env'), ['homol', 'hmg']);
+    }
+}
+
+if (!function_exists('response_api')) {
+    /**
+     * Retorno padrao para as resposta para API
+     * @param $data
+     * @param bool $status
+     * @param string $message
+     * @param int $status_code
+     * @return JsonResponse
+     */
+    function response_api($data, bool $status = true, string $message = '', int $status_code = 200): JsonResponse
+    {
+        return response()->json([
+            'success' => $status,
+            'message' => $message,
+            'data' => is_array($data) ? $data : [$data]
+        ], $status_code);
+    }
+}
+
+if (!function_exists('response_ok')) {
+    /**
+     * Retorno padrao de SUCESSO para as resposta para API
+     * @param $data
+     * @param string $message
+     * @param int $statusCode
+     * @return JsonResponse
+     */
+    function response_ok($data, string $message = '', int $statusCode = 200): JsonResponse
+    {
+        return response_api($data, true, $message, $statusCode);
+    }
+}
+
+if (!function_exists('response_no')) {
+    /**
+     * Retorno padrao de ERROR para as resposta para API
+     * @param $data
+     * @param string $message
+     * @param int $statusCode
+     * @return JsonResponse
+     */
+    function response_no($data, string $message = '', int $statusCode = 400): JsonResponse
+    {
+        $data = is_array($data) ? $data : [$data];
+        return response_api($data, false, $message, $statusCode);
+    }
+}
+
+if (!function_exists('pluck_matriz')) {
+    /**
+     * extrair parte de um ARRAY/MATRIZ com base num indice
+     * @param array $array
+     * @param $idx
+     * @param array $setup
+     * @return array
+     */
+    function pluck_matriz(array $array, $idx, $setup = [])
+    {
+        $dados = [];
+        foreach ($array as $row) {
+
+            if (!is_array($idx)) {
+                $valor = \Illuminate\Support\Arr::get($row, $idx, null);
+                if (!empty($valor))
+                    $dados[] = $valor;
+            } else {
+                $tmp = [];
+                foreach ($idx as $key) {
+                    $valor = \Illuminate\Support\Arr::get($row, $key, null);
+                    if (!empty($valor))
+                        $tmp[$key] = $valor;
+                }
+                if ($tmp) {
+                    $dados[] = $tmp;
+                }
+            }
+        }
+
+        return $dados;
+    }
+}
+
+if (!function_exists('group_array_by_id')) {
+
+    /**
+     * extrai um determinado indice unico e coloca o mesmo como indice do array
+     * @param $array
+     * @param $nameIdx
+     * @return array
+     *
+     * setKeyidxByMatriz( $array, 'codigo' )
+     * DE
+     * [0] => [
+     * 'codigo' => '102030',
+     * 'name' => fulano,
+     * 'email' => fulano@
+     * ]
+     * PARA
+     * [102030] => [
+     * 'codigo' => 102030,
+     * 'name' => fulano,
+     * 'email' => fulano@
+     * ]
+     *
+     */
+    function group_array_by_id($array, $nameIdx)
+    {
+        $tmp = [];
+        if (is_array($array) && !empty($array)) {
+            foreach ($array as $row) {
+                $tmp[Illuminate\Support\Arr::{'get'}($row, $nameIdx)] = $row;
+            }
+        }
+        return $tmp;
+    }
+}
+
+if (!function_exists('remove_duplicados')) {
+    function remove_duplicados($array, $nameIdx)
+    {
+        return array_values(group_array_by_id($array, $nameIdx));
+    }
+}
+
+if (!function_exists('send_log_error')) {
+    function send_log_error($msg, $channel = 'slack')
+    {
+        if (!empty($msg)) {
+            $msg = is_array($msg) ? $msg : [$msg];
+            app('log')->channel($channel)->error(config('app.name'), $msg);
+        }
+        return true;
+    }
+}
+
+if (!function_exists('search_like_in_array')) {
+
+    /**
+     * @param $array
+     * @param $search
+     * @return false|int|string
+     */
+    function search_like_in_array($array, $search)
+    {
+        foreach ($array as $key => $value) {
+            $current_key = $key;
+            if ($search === $value or (is_array($value) && search_like_in_array($value, $search) !== false)) {
+                return $current_key;
+            }
+        }
+        return false;
+    }
+}
+
+if (!function_exists('backtrace')) {
+    function backtrace(): \Illuminate\Support\Collection
+    {
+        $trace = debug_backtrace();
+
+        return collect([
+            'file' => $trace[1]['file'] ?? null,
+            'line' => $trace[1]['line'] ?? null,
+            'class' => $trace[2]['class'] ?? null,
+            'function' => $trace[2]['function'] ?? null,
+        ]);
+    }
+}
+
+if (!function_exists('send_log')) {
+    /**
+     * @param string|null $message
+     * @param array $setup
+     * @param string $action
+     * @param Throwable|null $exception
+     * @param bool $logSlack
+     */
+    function send_log(string $message = null, array $setup = [], string $action = 'info', ?\Throwable $exception = null, bool $logSlack = false)
+    {
+        // envia o backtrace E exception em ambiente local
+        if (is_local()) {
+            $setup = array_merge($setup, [
+                "Classe" => backtrace()->get('class'),
+                "Function" => backtrace()->get('function'),
+                "Linha" => backtrace()->get('line'),
+                "Arquivo" => backtrace()->get('file')
+            ]);
+
+            if (!is_null($exception)) {
+                $setup = array_merge($setup, get_exception($exception));
+            }
+        }
+
+        if (!is_local() && $logSlack) {
+            log_slack(
+                $message,
+                backtrace()->get('class'),
+                backtrace()->get('function'),
+                backtrace()->get('line'),
+                backtrace()->get('file'),
+                $exception,
+                $setup
+            );
+        }
+
+        Log::{$action}($message, $setup);
+    }
+}
+
+
+if (!function_exists('get_exception')) {
+    /**
+     * Separa todas as informações do exception em um array
+     *
+     * @param \Throwable|null $exception
+     * @return array
+     */
+    function get_exception(?\Throwable $exception = null): array
+    {
+        if (is_null($exception)) {
+            return [];
+        }
+
+        return [
+            'eMessage' => $exception->getMessage(),
+            'eFile' => $exception->getFile(),
+            'eLine' => $exception->getLine(),
+            'eCode' => $exception->getCode(),
+            'eTraceAsString' => $exception->getTraceAsString(),
+            'eTrace' => $exception->getTrace(),
+        ];
+    }
+}
+
+if (!function_exists('log_slack')) {
+
+    /**
+     * @param string $message
+     * @param string|null $class
+     * @param string|null $function
+     * @param string|null $line
+     * @param string|null $file
+     * @param Throwable|null $exception
+     * @param array|null $setup
+     */
+    function log_slack(
+        string     $message,
+        ?string    $class = null,
+        ?string    $function = null,
+        ?string    $line = null,
+        ?string    $file = null,
+        ?Throwable $exception = null,
+        ?array     $setup = null
+    )
+    {
+        $nomeProjeto = config('custom.PROJETO');
+        $type = null;
+
+        if ($exception) {
+            $line = $exception->getLine();
+            $file = $exception->getFile();
+            $type = get_class($exception);
+        }
+
+        app('log')->channel('slack')->error(
+            strtoupper($nomeProjeto), [
+                'Tipo' => $type,
+                'URL' => config('custom.URL'),
+                'Ambiente' => config('custom.AMBIENTE'),
+                'Classe' => $class,
+                'Função' => $function,
+                'Erro' => $message,
+                'Linha' => $line,
+                'Arquivo' => $file,
+                'Extras' => $setup
+            ]
+        );
+    }
+}
+
+if (!function_exists('group_by_key')) {
+
+    /**
+     * @param $array
+     * @param $keyName
+     * @return array
+     */
+    function group_by_key($array, $keyName)
+    {
+        $tmp = [];
+        if (is_array($array) && !empty($array)) {
+            foreach ($array as $row) {
+                $tmp[Illuminate\Support\Arr::{'get'}($row, $keyName)][] = $row;
+            }
+        }
+        return $tmp;
+    }
+}
+
+if (!function_exists('object_to_array')) {
+    function object_to_array($d)
+    {
+        if (is_object($d)) {
+            // Gets the properties of the given object
+            // with get_object_vars function
+            $d = get_object_vars($d);
+        }
+
+        if (is_array($d)) {
+            /*
+            * Return array converted to object
+            * Using __FUNCTION__ (Magic constant)
+            * for recursive call
+            */
+            return array_map(__FUNCTION__, $d);
+        } else {
+            // Return array
+            return $d;
+        }
+    }
+}
+
+if (!function_exists('is_cache_redis')) {
+    function is_cache_redis(): bool
+    {
+        return in_array(env('CACHE_DRIVER'), ['redis', 'redis_local']);
+    }
+}
+
+if (!function_exists('get_by_cache')) {
+    function get_by_cache($key, $default = null, array $tags = [])
+    {
+        if (!is_cache_redis()) {
+            return Cache::get($key, $default);
+        }
+
+        $tags = array_merge([config('cache.prefix')], $tags);
+        $tags = array_unique($tags);
+
+        return Cache::tags($tags)->get($key, $default);
+
+    }
+}
+
+if (!function_exists('save_in_cache')) {
+    function save_in_cache(string $key, $value, int $minutes = 0, array $tags = [])
+    {
+        if (!is_cache_redis()) {
+            Cache::put($key, $value, now()->addMinutes($minutes));
+            return;
+        }
+
+        $tags = array_merge([config('cache.prefix')], $tags);
+        $tags = array_unique($tags);
+
+        Cache::tags($tags)->put($key, $value, now()->addMinutes($minutes));
+
+    }
+}
+
+if (!function_exists('limpar_cache')) {
+    function limpar_cache($key, array $tags = [])
+    {
+        if (!is_cache_redis()) {
+            return Cache::forget($key);
+        }
+
+        $tags = array_merge([config('cache.prefix')], $tags);
+        $tags = array_unique($tags);
+
+        return Cache::tags($tags)->forget($key);
+
+    }
+}
+
+if (!function_exists('is_json')) {
+    function is_json($string, $return_data = false)
+    {
+        try {
+            $data = json_decode($string);
+            return (json_last_error() == JSON_ERROR_NONE) ? ($return_data ? $data : TRUE) : FALSE;
+        } catch (\TypeError $e) {
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('just_number')) {
+    function just_number(&$string)
+    {
+        $string = preg_replace("/[^0-9]/", "", $string);
+        return $string;
+    }
+}
+
+if (!function_exists('format_number')) {
+    /**
+     * @param $valor
+     * @param int $decimais
+     * @param string $decPoint
+     * @param string $thousands
+     * @return string
+     */
+    function format_number($valor, int $decimais = 8, $decPoint = ',', $thousands = '.')
+    {
+        if (is_null($valor)) {
+            $valor = 0;
+        }
+        return number_format(floatval($valor) ?? 0, $decimais, $decPoint, $thousands);
+    }
+}
+
+if (!function_exists('format_number_decimal_calc')) {
+    /**
+     * @param $valor
+     * @param string $decPoint
+     * @param string $thousands
+     * @return string
+     */
+    function format_number_decimal_calc($valor, $decPoint = ',', $thousands = '.')
+    {
+        if (is_null($valor)) {
+            $valor = 0;
+        }
+
+        $valorCalc = $valor;
+        if (!empty($valorCalc)) {
+            $valExplode = explode('.', $valorCalc);
+            $decimais = count($valExplode) === 2 ? strlen($valExplode[1]) : 2;
+            $valor = number_format(floatval($valor) ?? 0, $decimais, $decPoint, $thousands);
+        }
+
+        return $valor;
+    }
+}
+
+if (!function_exists('normaliza_monetario')) {
+    function normaliza_monetario($valor)
+    {
+        if ($valor and strpos($valor, ',') !== false) {
+            $valor = str_replace('.', '', $valor);
+            $valor = str_replace(',', '.', $valor);
+        }
+        return $valor;
+    }
+}
+
+if (!function_exists('fotmata_cpf_cnpj')) {
+    function fotmata_cpf_cnpj(?string $inscricao = null, ?string $tipo = null)
+    {
+        if (is_null($inscricao)) return null;
+
+        $cpf = str_pad($inscricao, 11, '0', STR_PAD_LEFT);
+        $cnpj = str_pad($inscricao, 14, '0', STR_PAD_LEFT);
+
+        $formatoCpf = sprintf(
+            '%s.%s.%s-%s',
+            substr($cpf, 0, 3),
+            substr($cpf, 3, 3),
+            substr($cpf, 6, 3),
+            substr($cpf, 9)
+        );
+        $formatoCnpj = sprintf(
+            '%s.%s.%s/%s-%s',
+            substr($cnpj, 0, 2),
+            substr($cnpj, 2, 3),
+            substr($cnpj, 5, 3),
+            substr($cnpj, 8, 4),
+            substr($cnpj, 12, 2)
+        );
+
+        return strlen($inscricao) > 11 || $tipo == 'cnpj' ? $formatoCnpj : $formatoCpf;
+    }
+}
+
+if (!function_exists('exec_job_agora')) {
+    function exec_job_agora($job): void
+    {
+        app(\Illuminate\Bus\Dispatcher::class)->dispatchNow($job);
+    }
+}
+
+if (!function_exists('get_ddd_domains')) {
+    function get_ddd_domains(int $cacheMinutos = 60, array $tags = []): array
+    {
+        $separator = DIRECTORY_SEPARATOR;
+        $domains = get_by_cache('list_ddd_domains', []);
+        if (empty($domains)) {
+            $dir = base_path('app' . $separator . 'Domain');
+            if (Illuminate\Support\Facades\File::exists($dir)) {
+                collect(Illuminate\Support\Facades\File::directories($dir))
+                    ->map(
+                        function ($dir) use ($separator, &$domains) {
+                            $domains[] = Illuminate\Support\Str::afterLast($dir, $separator);
+                        });
+                save_in_cache('list_ddd_domains', $domains, $cacheMinutos, $tags);
+            }
+        }
+        return $domains;
+    }
+}
+
+if (!function_exists('is_uuid4')) {
+    /**
+     * Retorna se é um uuid versão 4
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    function is_uuid4(string $uuid): bool
+    {
+        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $uuid) !== 1;
+    }
+}
+
+if (!function_exists('get_arquivos_rotas')) {
+    function get_arquivos_rotas(string $dir, string $sufixCache = null): array
+    {
+        $sufix = \Illuminate\Support\Str::afterLast($dir, '/');
+        $keyCache = 'list_routes_' . ($sufixCache ? $sufixCache . '_' : '') . $sufix;
+        $rotas = get_by_cache($keyCache, []);
+
+        if (is_local() || is_console() || empty($rotas)) {
+            $rotas = [];
+            foreach (\Illuminate\Support\Facades\File::files($dir) as $f) $rotas[] = $sufix . '/' . strtolower($f->getFilename());
+            if (!is_local()) save_in_cache($keyCache, $rotas, 360);
+        }
+
+        return $rotas;
+    }
+}
+
+if (!function_exists('dto_querie_prepare')) {
+    function dto_querie_prepare(
+        &$querie,
+        Fintools\SDKCore\Contracts\DTOAbstract $dto
+    ): void
+    {
+        if ($dto->isNotEmpty() && $dto->isFiltravel()) {
+
+            #verifica se eh instancia Model
+            $tableNome = method_exists($querie, 'getModel') ? $querie->getModel()->getTable() : null;
+
+            #verifica se é instancia QuerieBuilding
+            $tableNome = $tableNome ? $tableNome : (method_exists($querie, 'getTable') ? $querie->getTable() : null);
+
+            if ($tableNome) {
+                $where = app(\Fintools\SDKCore\Others\PrepareFiltroByDTO::class)
+                    ->build($dto, config("filters.{$tableNome}.de_para", []));
+                if (Arr::get($where, 'raw')) {
+                    $querie = $querie->whereRaw($where['raw'], $where['prepare']);
+                }
+            } else {
+                send_log(__METHOD__ . ':' . __LINE__ . ' ===> Tabela nao indentificada');
+            }
+        }
+    }
+}
+
+if (!function_exists('is_datadog_enabled')) {
+    function is_datadog_enabled()
+    {
+        return !is_local() && config('logging.log_datadog_enabled', false) == true;
+    }
+}
+
+if (!function_exists('is_console')) {
+    function is_console(): bool
+    {
+        return app()->runningInConsole();
+    }
+}
+
+if (!function_exists('is_ddd')) {
+    function is_ddd(): bool
+    {
+        return config('app.is_ddd', true) == true;
     }
 }
 
