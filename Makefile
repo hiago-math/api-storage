@@ -1,4 +1,4 @@
-include .env
+include .env.example
 
 setup:
 	@export APP_URL=${APP_URL}; \
@@ -10,18 +10,24 @@ start:
 	@echo "Copiando .env.example do projeto..."
 	@cp .env.example .env
 	@echo "Iniciando container..."
-	@docker-compose up -d --build
+	@docker compose up -d --build
 	@echo "Instalando composer..."
-	@docker-compose exec app composer install
+	@docker compose exec app composer install
 	@echo "Gerando chave do projeto..."
-	@docker-compose exec app php artisan key:generate
-	@echo "Rodando migrate..."
+	@docker compose exec app php artisan key:generate
 	@echo "Comando 'make start' executado com sucesso."
 	@echo "URL API ${APP_URL}:${NGINX_HOST_HTTP_PORT}/api"
-	@echo "URL WEB ${APP_URL}:${NGINX_HOST_HTTP_PORT}"
+	@echo "URL DOCUMENTACAO ${APP_URL}:${NGINX_HOST_HTTP_PORT}/api/documentation"
+	@echo $(shell date +"%Y-%m-%d %H:%M:%S") > storage/app/uptime.txt
 
 shell-app:
-	@docker-compose exec app bash
+	@docker compose exec app bash
+
+shell-queue:
+	@docker compose exec queue-work bash
+
+shell-schedule:
+	@docker compose exec schedule-runner bash
 
 stop:
-	@docker-compose down
+	@docker compose down

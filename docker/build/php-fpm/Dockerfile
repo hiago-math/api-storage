@@ -36,7 +36,8 @@ RUN apt-get update \
 
 RUN docker-php-ext-install pdo_mysql gd zip\
     && docker-php-ext-enable pdo_mysql zip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install sockets
 
 
 # Copy opcache configration

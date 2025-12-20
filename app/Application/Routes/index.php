@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'api'], function () {
+Route::group(['prefix' => 'api', 'middleware' => 'gerar-swagger'], function () {
 
     Route::get('/', function () {
         return response()->json([

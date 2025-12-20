@@ -1,13 +1,11 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Infrastructure\Elasticsearch\Rest;
-use Jenssegers\Mongodb\Connection;
-use MongoDB\Driver\Exception\AuthenticationException;
 
 if (!function_exists('get_files_routes')) {
 
@@ -114,19 +112,19 @@ if (!function_exists('send_log')) {
      */
     function send_log(string $message, array $options = [], string $type = "info", \Exception $exception = null)
     {
-        $doctype = \Shared\Enums\DocTypesElasticsearchEnum::DOC;
+        $doctype = \Shared\Enums\DocTypesElasticsearchEnum::DOC->value;
         if (!is_null($exception)) {
             $options['message_exception'] = $exception->getMessage();
             $options['code'] = $exception->getCode();
             $options['file'] = $exception->getFile() . ": " . $exception->getLine();
             $options['trace'] = $exception->getTraceAsString();
-            $doctype = \Shared\Enums\DocTypesElasticsearchEnum::ERROR;
+            $doctype = \Shared\Enums\DocTypesElasticsearchEnum::ERROR->value;
         }
 
         Log::$type($message, $options);
         $options['message'] = $message;
 
-        create_log_elastic($type, $doctype, $options);
+//        create_log_elastic($type, $doctype, $options);
     }
 }
 
@@ -221,14 +219,14 @@ if (!function_exists('get_hash_file')) {
 
 if (!function_exists('db_mongo_check')) {
 
-    function db_mongo_check()
+    function db_mongo_check(): string
     {
         try {
-            $mongodb = new Connection(config('database.connections.mongodb'));;
-            $con = $mongodb->getMongoClient()->listDatabaseNames();
+            $mongodb = DB::connection('mongodb');
+            $con = $mongodb->getDatabaseName();
             if (!empty($con)) return "Ok";
             return "Error";
-        } catch (AuthenticationException $authenticationException) {
+        } catch (Exception $e) {
             return "Error";
         }
     }

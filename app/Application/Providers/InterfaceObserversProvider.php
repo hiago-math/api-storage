@@ -21,7 +21,10 @@ class InterfaceObserversProvider extends ServiceProvider
         //
     }
 
-    private function loadingInterfaces()
+    /**
+     * @return void
+     */
+    private function loadingInterfaces(): void
     {
         $this->prepareDddApis();
         $this->prepareDddDomains();
@@ -34,7 +37,10 @@ class InterfaceObserversProvider extends ServiceProvider
         }
     }
 
-    private function prepareDddApis()
+    /**
+     * @return void
+     */
+    private function prepareDddApis(): void
     {
         $dirInfrastructure = base_path("app" . DIRECTORY_SEPARATOR . "Infrastructure/Apis" . DIRECTORY_SEPARATOR . 'change_infrastructure' . DIRECTORY_SEPARATOR . "Interfaces" . DIRECTORY_SEPARATOR);
 
@@ -45,7 +51,10 @@ class InterfaceObserversProvider extends ServiceProvider
         }
     }
 
-    private function prepareDddDomains()
+    /**
+     * @return void
+     */
+    private function prepareDddDomains(): void
     {
         $dirDomains = base_path("app" . DIRECTORY_SEPARATOR . "Domain" . DIRECTORY_SEPARATOR . 'change_domains' . DIRECTORY_SEPARATOR . "Interfaces" . DIRECTORY_SEPARATOR);
 
@@ -59,7 +68,12 @@ class InterfaceObserversProvider extends ServiceProvider
         }
     }
 
-    private function carregarArquivos(string $dirInterfaces, string $domain)
+    /**
+     * @param string $dirInterfaces
+     * @param string $domain
+     * @return void
+     */
+    private function carregarArquivos(string $dirInterfaces, string $domain): void
     {
         if (File::exists($dirInterfaces)) {
             foreach (File::files($dirInterfaces) as $file) {
@@ -107,7 +121,11 @@ class InterfaceObserversProvider extends ServiceProvider
         }
     }
 
-    private function identifyTipo(string $abstract)
+    /**
+     * @param string $abstract
+     * @return string|null
+     */
+    private function identifyTipo(string $abstract): ?string
     {
         switch (Str::afterLast(Str::snake($abstract, '\\'), '\\')) {
             case 'repository':
